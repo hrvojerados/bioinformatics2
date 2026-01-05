@@ -10,6 +10,9 @@ class HMM {
 public: 
   HMM() {
     int n_state = 5;
+    initStateP = vector<ld>(n_state);
+    transitionP = vector<vector<ld>>(n_state, vector<ld>(n_state));
+    emitP = vector<vector<ld>>(n_state, vector<ld>(25));
     initStateP[0] = 1;
     for (int i = 1; i < n_state; i++) {
       initStateP[i] = 0;  
@@ -63,7 +66,7 @@ public:
   }
   void train(
     int maxIterations,
-    vector<vector<pair<char, char>>>& data 
+    pair<string, string>& data 
   ){}
 
   pair<string, string> align() {
@@ -73,31 +76,71 @@ public:
   void print() {
     //used for debugging
     //prints Markov chain matricies
-    //prints alpha matrix
-    //prints beta matrix
-    //prints gamma matrix
-    //prints xi matrix
     cout << "PI:\n[";
     for (int i = 0; i < initStateP.size(); i++) {
       cout << initStateP[i];
       if (i != initStateP.size() - 1)
         cout << " ";
     } 
-    cout << "]\n";
-    cout << "A:\n[\n";
+    cout << "]\n\n";
+    cout << "A:\n";
     for (int i = 0; i < transitionP.size(); i++) {
-      cout << "[";
-      for (int j = 0; j < initStateP.size(); j++) {
-        cout << initStateP[j];
-        if (j != initStateP.size() - 1)
+      for (int j = 0; j < transitionP[i].size(); j++) {
+        cout << transitionP[i][j];
+        if (j != transitionP.size() - 1)
           cout << " ";
       } 
-      cout << "]\n";
+      cout << "\n";
     }
-    cout << "\n]";
-
+    cout << "\n";
+    cout << "E:\n";
+    vector<string> stateNames = {"Begin", "Match", "InsertX", "InsertY", "End"};
+    for (int i = 0; i < emitP.size(); i++) {
+      cout << "state: " << stateNames[i] << "\n";
+      for (int j = 0; j < 5; j++) {
+        for (int k = 0; k < 5; k++) {
+          cout << emitP[i][j * 5 + k];
+          if (k != 4)
+            cout << " ";
+        } 
+        cout << "\n";
+      }
+      cout << "\n";
+    }
   }
 
+  void printAlphaBetaGammaXi() {
+    //prints alpha matrix
+    //prints beta matrix
+    //prints gamma matrix
+    //prints xi matrix
+  }
+
+  void readData(
+    string path,
+    vector<pair<string, string>>& data) {
+    ifstream file(path);
+    if (!file.is_open()) {
+      cerr << "Couldn't open the file\n";
+    }
+    string line;
+    string seq1 = "";
+    string seq2 = "";
+    while(getline(file, line)) {
+      if (line[0] == '>') {
+        seq1 = "";
+        seq2 = "";
+      }
+      else if (seq1 == "") {
+        seq1 = line;
+      } 
+      else if (seq2 == ""){
+        seq2 = line;
+        data.emplace_back(seq1, seq2);
+      }
+    }
+    return;
+  }
 private:
   vector<ld> initStateP;
   vector<vector<ld>> transitionP;
@@ -114,13 +157,6 @@ private:
     {2, 'G'},
     {3, 'T'},
     {4, '-'}};
-
-  void readData(
-    string path,
-    vector<vector<pair<char, char>>>& data) {
-
-  }
-
     //A C G T - 
     //AA AC AG AT A-
     //CA CC CG CT C-
@@ -177,5 +213,15 @@ private:
 };
 
 int main() {
-  HMM();
+  string path = "data/Test_set.txt";
+  HMM* model = new HMM();
+  model->print();
+  vector<pair<string, string>> data;
+  model->readData(path, data);
+  for (int i = 0; i < data.size(); i++) {
+    cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+    cout << data[i].first << "\n";
+    cout << data[i].second << "\n";
+    cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+  }
 }

@@ -10,18 +10,19 @@ def main():
     train= lines[:len(lines)//2]
     test= lines[len(lines)//2:]
     pairs = list(make_pairs(train, 2000))
+    pairs2 = list(make_pairs(test, 2000))
     f.close()
     out = open(train_file, "w")
     for pair in pairs:
         out_pair = connect_holes(clear_empty(pair))
-        out.write(out_pair[0]+'\n'+out_pair[1]+'\n')
+        out.write(out_pair[0].strip()+'\n'+out_pair[1].strip()+'\n')
         out.write(">>>\n")
     out.close()
 
     out = open(test_file, "w")
-    for pair in pairs:
+    for pair in pairs2:
         out_pair = clear_fully(pair)
-        out.write(out_pair[0]+'\n'+out_pair[1]+'\n')
+        out.write(out_pair[0].strip()+'\n'+out_pair[1].strip()+'\n')
         out.write(">>>\n")
     out.close()
     
