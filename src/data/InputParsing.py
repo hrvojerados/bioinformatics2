@@ -1,6 +1,8 @@
 import random
 
-input_file = "BIOINF_INPUT.fasta"
+input_file = "input.fasta"
+
+
 output_file = "Train_set.txt"
 
 def main():
