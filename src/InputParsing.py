@@ -1,7 +1,8 @@
 import random
 
-input_file = "BIOINF_INPUT.fasta"
-output_file = "Train_set.txt"
+input_file = "HIV1_ALL_2022_env_DNA.fasta"
+train_file = "Train_set.txt"
+test_file = "Test_set.txt"
 
 def main():
     f = open(input_file, "r")
@@ -10,11 +11,20 @@ def main():
     test= lines[len(lines)//2:]
     pairs = list(make_pairs(train, 2000))
     f.close()
-    out = open(output_file, "w")
+    out = open(train_file, "w")
     for pair in pairs:
-        out.write(connect_holes(clear_empty(pair))[0]+'\n'+connect_holes(clear_empty(pair))[1]+'\n')
+        out_pair = connect_holes(clear_empty(pair))
+        out.write(out_pair[0]+'\n'+out_pair[1]+'\n')
         out.write(">>>\n")
     out.close()
+
+    out = open(test_file, "w")
+    for pair in pairs:
+        out_pair = clear_fully(pair)
+        out.write(out_pair[0]+'\n'+out_pair[1]+'\n')
+        out.write(">>>\n")
+    out.close()
+    
 def make_pairs(lines, n):
     
     pairs = set()
@@ -22,6 +32,11 @@ def make_pairs(lines, n):
         pair = (random.sample(lines,2))
         pairs.add((pair[0].split('\n',1)[1].replace('\n','')+'\n',pair[1].split('\n',1)[1].replace('\n','')+'\n'))
     return pairs
+
+def clear_fully(pair):
+    seq1=pair[0].replace("-", "")
+    seq2=pair[1].replace("-", "")
+    return [seq1, seq2]
         
 def clear_empty(pair):
     seq1=pair[0]
