@@ -5,6 +5,18 @@
 using namespace std;
 using ld = long double;
 
+void print2DVector(const std::vector<std::vector<int>>& mat)
+{
+    for (const auto& row : mat)
+    {
+        for (int val : row)
+        {
+            std::cout << std::setw(4) << val << " ";
+        }
+        std::cout << '\n';
+    }
+}
+
 // A[i][j]
 class HMM {
 public: 
@@ -69,7 +81,60 @@ public:
     pair<string, string>& data 
   ){}
 
-  pair<string, string> align() {
+  pair<string, string> align(pair<string, string>& data ) {
+      string X = data.first;
+      int nX = 0;
+      string Y = data.second;
+      int nY = 0;
+
+      cout << X << " " << Y << "\n";
+
+      vector<ld> currDelta = {0,0,0,0,1};
+      vector<ld> prevDelta = {0,0,0,0,1};
+      vector<vector<int>> path = 
+        vector<vector<int>>
+          (max(X.length(), Y.length()), 
+            vector<int>(5, 0));
+      ld mx;
+      int emission;
+      int t = 0;
+      int jMax;
+      while (nX<X.length() && nY < Y.length()) {
+        cout << "\n" << X[nX] << " " << Y[nY];
+        prevDelta = currDelta;
+        for (int i=0; i<5; i++) {
+          mx = 0;
+          for (int j=0; j<5; j++) {
+            ld tmp = prevDelta[j]*this->transitionP[j][i];
+            if (tmp>mx) {
+              mx = tmp;
+              jMax = j; 
+            }
+          }
+          if (jMax==2) {
+            emission = symsToNum({X[nX], "-"});
+          } else if (jMax==3) {
+
+          } else {
+
+          }
+          currDelta = mx * this->emitP[emission];
+          
+          path[t][i] = jMax;
+        } 
+        t++;
+      }
+      mx = 0;
+      for (int i = 0; i<5; i++) {
+        if (currDelta[i]>mx) {
+          mx = currDelta[i];
+          jMax = i;
+        }
+      }
+
+      print2DVector(path);
+      
+
     return {"jelena", "hrvoje"};
   }
 
@@ -215,13 +280,11 @@ private:
 int main() {
   string path = "data/Test_set.txt";
   HMM* model = new HMM();
-  model->print();
+  //model->print();
   vector<pair<string, string>> data;
-  model->readData(path, data);
-  for (int i = 0; i < data.size(); i++) {
-    cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n";
-    cout << data[i].first << "\n";
-    cout << data[i].second << "\n";
-    cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n";
-  }
+  //model->readData(path, data);
+  pair<string, string> seqs = {"TTCG", "TCGTC"};
+  model->align(seqs);
+  cout << "Hi";
+
 }
