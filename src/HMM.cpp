@@ -1,5 +1,5 @@
 #include<bits/stdc++.h>
-#include <map>
+#include <cmath>
 #include <vector>
 
 using namespace std;
@@ -10,6 +10,18 @@ void print2DVector(const std::vector<std::vector<ld>>& mat)
     for (const auto& row : mat)
     {
         for (ld val : row)
+        {
+            std::cout << std::setw(4) << val << " ";
+        }
+        std::cout << '\n';
+    }
+}
+
+void print2DVector(const std::vector<std::vector<int>>& mat)
+{
+    for (const auto& row : mat)
+    {
+        for (int val : row)
         {
             std::cout << std::setw(4) << val << " ";
         }
@@ -82,69 +94,107 @@ public:
   ){}
 
   pair<string, string> align(pair<string, string>& data ) {
-      string X = data.first;
-      string Y = data.second;
-      vector<vector<ld>> Vm = vector<vector<ld>>(X.length(), vector<ld>(Y.length(), 0.0));
-      vector<vector<ld>> Vix = vector<vector<ld>>(X.length(), vector<ld>(Y.length(), 0.0));
-      vector<vector<ld>> Viy = vector<vector<ld>>(X.length(), vector<ld>(Y.length(), 0.0));
+    string X = data.first;
+    string Y = data.second;
+    vector<vector<ld>> Vm =
+      vector<vector<ld>>
+        (X.length(), vector<ld>
+          (Y.length(), log(0)));
+    vector<vector<ld>> Vix =
+      vector<vector<ld>>
+        (X.length(), vector<ld>
+          (Y.length(), log(0)));
+    vector<vector<ld>> Viy =
+      vector<vector<ld>>
+        (X.length(),vector<ld>
+          (Y.length(), log(0)));
+    vector<vector<int>> MPrev =
+      vector<vector<int>>
+        (X.length(), vector<int>
+          (Y.length(), 0));
+    vector<vector<int>> IxPrev =
+      vector<vector<int>>
+        (X.length(), vector<int>
+          (Y.length(), 0));
+    vector<vector<int>> IyPrev =
+      vector<vector<int>>
+        (X.length(), vector<int>
+          (Y.length(), 0));
+    Vm[0][0] = 0;
+    int emission;
+    for (int i=1; i<X.length(); i++) {
+      for (int j=1; j< Y.length(); j++) {
+        emission = symsToNum({X[i],Y[j]});
+        ld tmp1 = Vm[i-1][j-1] + log(transitionP[1][1]);
+        ld tmp2 = Vix[i-1][j-1] + log(transitionP[2][1]);
+        ld tmp3 = Viy[i-1][j-1] + log(transitionP[3][1]);
+        Vm[i][j] = 
+          log(emitP[1][emission]) +
+            max({tmp1, tmp2, tmp3});
+        if (tmp1 >= tmp2 && tmp1 >= tmp3) {
+          MPrev[i][j] = 1;
+        } else if (tmp2 >= tmp3) {
+          MPrev[i][j] = 2;
+        } else {
+          MPrev[i][j] = 3;
+        }
 
-      vector<vector<ld>> MPrev = vector<vector<ld>>(X.length(), vector<ld>(Y.length(), 0.0));
-      vector<vector<ld>> IxPrev = vector<vector<ld>>(X.length(), vector<ld>(Y.length(), 0.0));
-      vector<vector<ld>> IyPrev = vector<vector<ld>>(X.length(), vector<ld>(Y.length(), 0.0));
-      
-      Vm[0][0] = 1.0;
-
-      int emission;
-
-      for (int i=1; i<X.length(); i++) {
-        for (int j=1; j< Y.length(); j++) {
-          emission = symsToNum({X[i],Y[j]});
-          Vm[i][j] = emitP[1][emission] * max(
-            {Vm[i-1][j-1]*transitionP[1][1], 
-              Vix[i-1][j-1]*transitionP[1][2], 
-              Viy[i-1][j-1]*transitionP[1][3]});
-          if (Vm[i-1][j-1]*transitionP[1][1] >= Vix[i-1][j-1]*transitionP[1][2] && Vm[i-1][j-1]*transitionP[1][1]>=Viy[i-1][j-1]*transitionP[1][3]) {
-            MPrev[i][j] = 1;
-          } else if (Vix[i-1][j-1]*transitionP[1][2] >= Viy[i-1][j-1]*transitionP[1][3]) {
-            MPrev[i][j] = 2;
-          } else {
-            MPrev[i][j] = 3;
-          }
-
-          emission = symsToNum({X[i],'-'});
-          Vix[i][j] = emitP[2][emission] * max({Vm[i-1][j]*transitionP[1][2], Vix[i-1][j]*transitionP[2][2]});
-          if (Vm[i-1][j]*transitionP[1][2]>=Vix[i-1][j]*transitionP[2][2]){
-            IxPrev[i][j] = 1;
-          } else {
-            IxPrev[i][j] = 2;
-          }
-
-          emission = symsToNum({'-',Y[j]});
-          Viy[i][j] = emitP[3][emission] * max({Vm[i][j-1]*transitionP[1][3], Viy[i][j-1]*transitionP[3][3]});
-          if (Vm[i][j-1]*transitionP[1][3]>=Viy[i][j-1]*transitionP[3][3]) 
-          {  IyPrev[i][j] = 1;
-          } else {
-            IyPrev[i][j] = 3;
-          }
+        emission = symsToNum({X[i],'-'});
+        tmp1 = Vm[i-1][j] + log(transitionP[1][2]);
+        tmp2 = Vix[i-1][j] + log(transitionP[2][2]); 
+        Vix[i][j] = log(emitP[2][emission]) + max(tmp1, tmp2);
+        if (tmp1 >= tmp2){
+          IxPrev[i][j] = 1;
+        } else {
+          IxPrev[i][j] = 2;
+        }
+        emission = symsToNum({'-',Y[j]});
+        tmp1 = Vm[i][j-1] + log(transitionP[1][3]);
+        tmp2 = Viy[i][j-1] + log(transitionP[3][3]);
+        Viy[i][j] = log(emitP[3][emission]) + max(tmp1, tmp2);
+        if (tmp1 >= tmp2) {  
+          IyPrev[i][j] = 1;
+        } else {
+          IyPrev[i][j] = 3;
         }
       }
+    }
 
-      print2DVector(Vm);
-      cout << "\n";
-      print2DVector(Vix);
-      cout << "\n";
-      print2DVector(Viy);
-      cout << "\n";
-      print2DVector(MPrev);
-      cout << "\n";
-      print2DVector(IxPrev);
-      cout << "\n";
-      print2DVector(IyPrev);
-      cout << "\n";
-
-      
-
-    return {"jelena", "hrvoje"};
+    string seq1 = "-";
+    string seq2 = "-";
+    int x = X.size() - 1;
+    int y = Y.size() - 1;
+    int curState;
+    int nxtState;
+    while (x != 0 && y != 0) {
+      if (
+        Vm[x][y] > Vix[x][y] && 
+        Vm[x][y] > Viy[x][y]) {
+        curState = 1; 
+        nxtState = Vm[x][y];
+        seq1 = X[x] + seq1;
+        seq2 = Y[y] + seq2;
+        x--;
+        y--;
+      } else if (
+        Vix[x][y] > Viy[x][y]) {
+        curState = 2; 
+        nxtState = Vix[x][y];
+        seq1 = X[x] + seq1;
+        seq2 = '-' + seq2;
+        x--;
+      } else {
+        curState = 3; 
+        nxtState = Viy[x][y];
+        seq1 = '-' + seq1;
+        seq2 = Y[y] + seq2;
+        // cout << seq1 << " " << seq2 << "\n";
+        y--;
+      } 
+    }
+    seq1 = '-' + seq1;
+    seq2 = '-' + seq2;
+    return {seq1, seq2};
   }
 
   void print() {
@@ -292,8 +342,8 @@ int main() {
   //model->print();
   vector<pair<string, string>> data;
   //model->readData(path, data);
-  pair<string, string> seqs = {"TTCG", "TCGTC"};
-  model->align(seqs);
-  cout << "Hi";
-
+  pair<string, string> seqs = {"-TTCG", "-TCGTC"};
+  auto [s1, s2] = model->align(seqs);
+  cout << s1 << "\n";
+  cout << s2 << "\n";
 }
