@@ -5,6 +5,7 @@
 using namespace std;
 using ld = long double;
 
+#define eps 1e-10
 // A[i][j]
 class HMM {
 public: 
@@ -84,6 +85,7 @@ public:
       Y.push_back(24);
       // cout << "\n";
       for (int iteration = 0; iteration < maxIterations; iteration++) {
+        this->print();
         vector<vector<ld>> alpha = 
           vector<vector<ld>>
           (Y.size(),vector<ld>
@@ -107,36 +109,41 @@ public:
         this->calcGamma(alpha, beta, gamma, Y);
         this->calcXi(alpha, beta, xi, Y);
 
-        printAlphaBetaGammaXi(alpha, beta, gamma, xi, Y);
+        // printAlphaBetaGammaXi(alpha, beta, gamma, xi, Y);
         for (int i = 0; i < this->initStateP.size(); i++) {
           this->initStateP[i] = gamma[0][i];
         }
 
-        for (int i = 0; i < this->transitionP.size(); i++) {
+        for (int i = 0; i < this->transitionP.size() - 1; i++) {
+          ld denominator = 0;
+          for (int t = 0; t < Y.size() - 1; t++) {
+            denominator += gamma[t][i]; 
+          }
+          if (denominator == 0)
+            continue;
           for (int j = 0; j < this->transitionP.size(); j++) {
             ld numerator = 0;
-            for (int t = 0; t < Y.size(); t++) {
-              numerator += xi[t][i][j]; 
-            }
-            ld denominator = 0;
             for (int t = 0; t < Y.size() - 1; t++) {
-              denominator += gamma[t][i]; 
+              numerator += xi[t][i][j]; 
             }
             this->transitionP[i][j] = numerator / denominator;
           }
         }
-        for (int i = 0; i < this->emitP.size(); i++) {
+
+        for (int i = 1; i < this->emitP.size() - 1; i++) {
+          ld denominator = 0;
+          for (int t = 0; t < Y.size() - 1; t++) {
+            denominator += gamma[t][i]; 
+          }
+          if (denominator == 0)
+            continue;
           for (int k = 0; k < this->emitP[i].size(); k++) {
             ld numerator = 0;
             for (int t = 0; t < Y.size(); t++) {
               if (Y[t] == k)
                 numerator += gamma[t][i]; 
             }
-            ld denominator = 0;
-            for (int t = 0; t < Y.size() - 1; t++) {
-              denominator += gamma[t][i]; 
-            }
-            this->emitP[i][k] = numerator / denominator;
+            this->emitP[i][k] = (numerator + eps) / (denominator + 25 * eps);
           }
         }
       }
@@ -327,12 +334,16 @@ private:
     if (t == 0) {
       return alpha[t][i] = initStateP[i] * emitP[i][Y[t]];
     }
+    ld scale = 0;
+    for (int j = 0; j < n_state; j++) { 
+      scale += alpha[t - 1][j];
+    }
     ld alp = 0;
     for (int j = 0; j < n_state; j++) {
       alp += calcAlphaR(alpha, t - 1, j, Y) * transitionP[j][i];
     }
     alp *= emitP[i][Y[t]];
-    return alpha[t][i] = alp;
+    return alpha[t][i] = alp / scale;
   }
 
   void calcAlpha(
@@ -359,7 +370,11 @@ private:
     for (int j = 0; j < n_state; j++) {
       bet += calcBetaR(beta, t + 1, j, Y) * transitionP[i][j] * emitP[j][Y[t + 1]];
     }
-    return beta[t][i] = bet;
+    ld scale = 0;
+    for (int j = 0; j < n_state; j++) { 
+      scale += beta[t + 1][j];
+    }
+    return beta[t][i] = bet / scale;
   }
 
   void calcBeta(
@@ -397,16 +412,16 @@ private:
     for (int t = 0; t < Y.size() - 1; t++) {
       for (int i = 0; i < n_state; i++) {
         for (int j = 0; j < n_state; j++) {
-          // ld den = 0;
-          // for (int k = 0; k < n_state; k++) {
-          //   for (int l = 0; l < n_state; l++) {
-          //     den += alpha[t][k] * transitionP[k][l] * beta[t + 1][l] * emitP[l][Y[t + 1]];
-          //   }
-          // }
           ld den = 0;
           for (int k = 0; k < n_state; k++) {
-            den += alpha[t][k] * beta[t][k];
+            for (int l = 0; l < n_state; l++) {
+              den += alpha[t][k] * transitionP[k][l] * beta[t + 1][l] * emitP[l][Y[t + 1]];
+            }
           }
+          // ld den = 0;
+          // for (int k = 0; k < n_state; k++) {
+          //   den += alpha[t][k] * beta[t][k];
+          // }
           xi[t][i][j] = (alpha[t][i] * transitionP[i][j] * beta[t + 1][j] * emitP[j][Y[t + 1]]) / den;
         }
       }
@@ -416,5 +431,5 @@ private:
 
 int main() {
   HMM* model = new HMM();
-  model->test1();
+  model->test2();
 }
