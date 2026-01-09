@@ -5,11 +5,11 @@
 using namespace std;
 using ld = long double;
 
-void print2DVector(const std::vector<std::vector<int>>& mat)
+void print2DVector(const std::vector<std::vector<ld>>& mat)
 {
     for (const auto& row : mat)
     {
-        for (int val : row)
+        for (ld val : row)
         {
             std::cout << std::setw(4) << val << " ";
         }
@@ -83,56 +83,65 @@ public:
 
   pair<string, string> align(pair<string, string>& data ) {
       string X = data.first;
-      int nX = 0;
       string Y = data.second;
-      int nY = 0;
+      vector<vector<ld>> Vm = vector<vector<ld>>(X.length(), vector<ld>(Y.length(), 0.0));
+      vector<vector<ld>> Vix = vector<vector<ld>>(X.length(), vector<ld>(Y.length(), 0.0));
+      vector<vector<ld>> Viy = vector<vector<ld>>(X.length(), vector<ld>(Y.length(), 0.0));
 
-      cout << X << " " << Y << "\n";
+      vector<vector<ld>> MPrev = vector<vector<ld>>(X.length(), vector<ld>(Y.length(), 0.0));
+      vector<vector<ld>> IxPrev = vector<vector<ld>>(X.length(), vector<ld>(Y.length(), 0.0));
+      vector<vector<ld>> IyPrev = vector<vector<ld>>(X.length(), vector<ld>(Y.length(), 0.0));
+      
+      Vm[0][0] = 1.0;
 
-      vector<ld> currDelta = {0,0,0,0,1};
-      vector<ld> prevDelta = {0,0,0,0,1};
-      vector<vector<int>> path = 
-        vector<vector<int>>
-          (max(X.length(), Y.length()), 
-            vector<int>(5, 0));
-      ld mx;
       int emission;
-      int t = 0;
-      int jMax;
-      while (nX<X.length() && nY < Y.length()) {
-        cout << "\n" << X[nX] << " " << Y[nY];
-        prevDelta = currDelta;
-        for (int i=0; i<5; i++) {
-          mx = 0;
-          for (int j=0; j<5; j++) {
-            ld tmp = prevDelta[j]*this->transitionP[j][i];
-            if (tmp>mx) {
-              mx = tmp;
-              jMax = j; 
-            }
-          }
-          if (jMax==2) {
-            emission = symsToNum({X[nX], "-"});
-          } else if (jMax==3) {
 
+      for (int i=1; i<X.length(); i++) {
+        for (int j=1; j< Y.length(); j++) {
+          emission = symsToNum({X[i],Y[j]});
+          Vm[i][j] = emitP[1][emission] * max(
+            {Vm[i-1][j-1]*transitionP[1][1], 
+              Vix[i-1][j-1]*transitionP[1][2], 
+              Viy[i-1][j-1]*transitionP[1][3]});
+          if (Vm[i-1][j-1]*transitionP[1][1] >= Vix[i-1][j-1]*transitionP[1][2] && Vm[i-1][j-1]*transitionP[1][1]>=Viy[i-1][j-1]*transitionP[1][3]) {
+            MPrev[i][j] = 1;
+          } else if (Vix[i-1][j-1]*transitionP[1][2] >= Viy[i-1][j-1]*transitionP[1][3]) {
+            MPrev[i][j] = 2;
           } else {
-
+            MPrev[i][j] = 3;
           }
-          currDelta = mx * this->emitP[emission];
-          
-          path[t][i] = jMax;
-        } 
-        t++;
-      }
-      mx = 0;
-      for (int i = 0; i<5; i++) {
-        if (currDelta[i]>mx) {
-          mx = currDelta[i];
-          jMax = i;
+
+          emission = symsToNum({X[i],'-'});
+          Vix[i][j] = emitP[2][emission] * max({Vm[i-1][j]*transitionP[1][2], Vix[i-1][j]*transitionP[2][2]});
+          if (Vm[i-1][j]*transitionP[1][2]>=Vix[i-1][j]*transitionP[2][2]){
+            IxPrev[i][j] = 1;
+          } else {
+            IxPrev[i][j] = 2;
+          }
+
+          emission = symsToNum({'-',Y[j]});
+          Viy[i][j] = emitP[3][emission] * max({Vm[i][j-1]*transitionP[1][3], Viy[i][j-1]*transitionP[3][3]});
+          if (Vm[i][j-1]*transitionP[1][3]>=Viy[i][j-1]*transitionP[3][3]) 
+          {  IyPrev[i][j] = 1;
+          } else {
+            IyPrev[i][j] = 3;
+          }
         }
       }
 
-      print2DVector(path);
+      print2DVector(Vm);
+      cout << "\n";
+      print2DVector(Vix);
+      cout << "\n";
+      print2DVector(Viy);
+      cout << "\n";
+      print2DVector(MPrev);
+      cout << "\n";
+      print2DVector(IxPrev);
+      cout << "\n";
+      print2DVector(IyPrev);
+      cout << "\n";
+
       
 
     return {"jelena", "hrvoje"};
