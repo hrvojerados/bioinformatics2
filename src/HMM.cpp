@@ -126,9 +126,16 @@ public:
             }
             if (i == 0 || i == 1) {
               this->transitionP[i][j] = (numerator + eps) / (denominator + 4 * eps);
-            } else if (i == 2 || i == 3) {
-              this->transitionP[i][j] = (numerator + eps) / (denominator + 3 * eps);
-            } else {
+            } else if (i == 2) {
+              if (j!=3) {
+                this->transitionP[i][j] = (numerator + eps) / (denominator + 3 * eps);
+              }
+            } else if (i == 3){
+              if (j != 2) {
+                this->transitionP[i][j] = (numerator + eps) / (denominator + 3 * eps);
+              }
+            }
+            else {
               cerr << "huh?\n";
             }
           }
