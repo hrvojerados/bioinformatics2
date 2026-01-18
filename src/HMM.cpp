@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-
+#include <chrono>
 using namespace std;
 using ld = long double;
 using ll = long long;
@@ -11,6 +11,32 @@ using ll = long long;
 #define eps 1e-10
 #define EPS 20
 #define numOfIterations 50
+
+void readData(
+  string path,
+  vector<pair<string, string>>& data) {
+  ifstream file(path);
+  if (!file.is_open()) {
+    cerr << "Couldn't open the file\n";
+  }
+  string line;
+  string seq1 = "";
+  string seq2 = "";
+  while(getline(file, line)) {
+    if (line[0] == '>') {
+      seq1 = "";
+      seq2 = "";
+    }
+    else if (seq1 == "") {
+      seq1 = line;
+    } 
+    else if (seq2 == ""){
+      seq2 = line;
+      data.emplace_back(seq1, seq2);
+    }
+  }
+  return;
+}
 
 class HMM {
 public: 
@@ -78,6 +104,8 @@ public:
       // this->print();
       if (data[ind].first.size() != data[ind].second.size()) {
         cerr << "given data is surely not aligned properly\n";
+        cerr << data[ind].first.size() << "\n";
+        cerr << data[ind].second.size() << "\n";
         return;
       }
       vector<int> Y;
@@ -207,8 +235,8 @@ public:
     return;
   }
 
-  void writeParameters(string fileName) {
-    ofstream file("params/" + fileName + ".txt");
+  void writeParameters(string path) {
+    ofstream file(path);
     for (int i = 0; i < transitionP.size(); i++) {
       for (int j = 0; j < transitionP[i].size(); j++) {
         file << transitionP[i][j];
@@ -430,32 +458,6 @@ public:
     }
   }
 
-  void readData(
-    string path,
-    vector<pair<string, string>>& data) {
-    ifstream file(path);
-    if (!file.is_open()) {
-      cerr << "Couldn't open the file\n";
-    }
-    string line;
-    string seq1 = "";
-    string seq2 = "";
-    while(getline(file, line)) {
-      if (line[0] == '>') {
-        seq1 = "";
-        seq2 = "";
-      }
-      else if (seq1 == "") {
-        seq1 = line;
-      } 
-      else if (seq2 == ""){
-        seq2 = line;
-        data.emplace_back(seq1, seq2);
-      }
-    }
-    return;
-  }
-
 private:
   vector<ld> initStateP;
   vector<vector<ld>> transitionP;
@@ -624,7 +626,106 @@ ll NW(string x, string y) {
   return dp[x.size()][y.size()];
 }
 
-ll evaluateAlignment(string x, string y) {
+ll NW2x(string x, string y) {
+  vector<vector<ll>> dp =
+    vector<vector<ll>>
+      (x.size() + 1, vector<ll>
+        (y.size() + 1)); 
+  for (int j = 0; j < y.size() + 1; j++) {
+    dp[0][j] = j * (-4);
+  }
+  for (int i = 0; i < x.size() + 1; i++) {
+    dp[i][0] = i * (-4);
+  }
+  for (int i = 1; i < x.size() + 1; i++) {
+    for (int j = 1; j < y.size() + 1; j++) {
+      dp[i][j] = 
+        max({
+          dp[i - 1][j] - 4,
+          dp[i][j - 1] - 4,
+          dp[i - 1][j - 1] + 2 * (x[i - 1] == y[j - 1]) + (-2) * (x[i - 1] != y[j - 1]) 
+        });
+    }
+  }
+  return dp[x.size()][y.size()];
+}
+
+ll NWHalfX(string x, string y) {
+  vector<vector<ld>> dp =
+    vector<vector<ld>>
+      (x.size() + 1, vector<ld>
+        (y.size() + 1)); 
+  for (int j = 0; j < y.size() + 1; j++) {
+    dp[0][j] = j * (-1);
+  }
+  for (int i = 0; i < x.size() + 1; i++) {
+    dp[i][0] = i * (-1);
+  }
+  for (int i = 1; i < x.size() + 1; i++) {
+    for (int j = 1; j < y.size() + 1; j++) {
+      dp[i][j] = 
+        max({
+          dp[i - 1][j] - 1,
+          dp[i][j - 1] - 1,
+          dp[i - 1][j - 1] + (0.5) * (x[i - 1] == y[j - 1]) + (-0.5) * (x[i - 1] != y[j - 1]) 
+        });
+    }
+  }
+  return dp[x.size()][y.size()];
+}
+
+ll NWEqual(string x, string y) {
+  vector<vector<ld>> dp =
+    vector<vector<ld>>
+      (x.size() + 1, vector<ld>
+        (y.size() + 1)); 
+  for (int j = 0; j < y.size() + 1; j++) {
+    dp[0][j] = j * (-1);
+  }
+  for (int i = 0; i < x.size() + 1; i++) {
+    dp[i][0] = i * (-1);
+  }
+  for (int i = 1; i < x.size() + 1; i++) {
+    for (int j = 1; j < y.size() + 1; j++) {
+      dp[i][j] = 
+        max({
+          dp[i - 1][j] - 1,
+          dp[i][j - 1] - 1,
+          dp[i - 1][j - 1] + (1) * (x[i - 1] == y[j - 1]) + (-1) * (x[i - 1] != y[j - 1]) 
+        });
+    }
+  }
+  return dp[x.size()][y.size()];
+}
+
+ll NWWeDontLikeInsert(string x, string y) {
+  vector<vector<ld>> dp =
+    vector<vector<ld>>
+      (x.size() + 1, vector<ld>
+        (y.size() + 1)); 
+  for (int j = 0; j < y.size() + 1; j++) {
+    dp[0][j] = j * (-10);
+  }
+  for (int i = 0; i < x.size() + 1; i++) {
+    dp[i][0] = i * (-10);
+  }
+  for (int i = 1; i < x.size() + 1; i++) {
+    for (int j = 1; j < y.size() + 1; j++) {
+      dp[i][j] = 
+        max({
+          dp[i - 1][j] - 10,
+          dp[i][j - 1] - 10,
+          dp[i - 1][j - 1] + (1) * (x[i - 1] == y[j - 1]) + (-1) * (x[i - 1] != y[j - 1]) 
+        });
+    }
+  }
+  return dp[x.size()][y.size()];
+}
+
+ll evaluateAlignment(string x, string y, bool printMax = false) {
+  if (printMax) {
+    return x.size();
+  }
   ll val = 0;
   for (int i = 0; i < x.size(); i++) {
     if (x[i] == y[i])
@@ -638,67 +739,71 @@ ll evaluateAlignment(string x, string y) {
   return val;
 }
 
-void test1() {
-  HMM* model = new HMM();
-  string path = "data/Train_set.txt";
-  vector<pair<string, string>> data;
-  model->readData(path, data);
-  cout << data.size() << "\n";
-  model->train(numOfIterations, data);
-  model->print();
-}
-
-void test2() {
-  HMM* model = new HMM();
-  string path = "params/newParameters.txt";
-  vector<pair<string, string>> data;
-  model->print();
-  model->writeParameters("newParameters");
-}
-
-void test3() {
-  ifstream file("data/Test_set.txt");
-  string line;
-  string x;
-  string y;
-  while (getline(file, line)) {
-    if (line[0] == '>') {
-      x = "";
-      y = "";
-      continue;
-    } else if (x == ""){
-      x = line;
+ll evaluateAlignment2x(string x, string y, bool printMax = false) {
+  if (printMax) {
+    return x.size();
+  }
+  ll val = 0;
+  for (int i = 0; i < x.size(); i++) {
+    if (x[i] == y[i])
+      val += 2;
+    else if (x[i] == '-' || y[i] == '-') {
+      val -= 4;
     } else {
-      y = line;
-      cout << NW(x, y) << "\n";
+      val -= 2;
     }
   }
+  return val;
 }
-
-void test4() {
-  HMM* model = new HMM();
-  string path = "params/params.txt";
-  model->readParameters(path);
-  ifstream file("data/Test_set.txt");
-  string line;
-  string x;
-  string y;
-  while (getline(file, line)) {
-    if (line[0] == '>') {
-      x = "";
-      y = "";
-      continue;
-    } else if (x == ""){
-      x = line;
+ 
+ll evaluateAlignmentHalfX(string x, string y, bool printMax = false) {
+  if (printMax) {
+    return x.size();
+  }
+  ld val = 0;
+  for (int i = 0; i < x.size(); i++) {
+    if (x[i] == y[i])
+      val += (0.5);
+    else if (x[i] == '-' || y[i] == '-') {
+      val -= 1;
     } else {
-      y = line;
-      auto [alignedX, alignedY] =
-        model->align(x, y);
-      cout << evaluateAlignment(alignedX, alignedY) << "\n";
+      val -= (0.5);
     }
   }
+  return val;
 }
 
-int main() {
-  test4();
+ll evaluateAlignmentEqual(string x, string y, bool printMax = false) {
+  if (printMax) {
+    return x.size();
+  }
+  ll val = 0;
+  for (int i = 0; i < x.size(); i++) {
+    if (x[i] == y[i])
+      val += 1;
+    else if (x[i] == '-' || y[i] == '-') {
+      val -= 1;
+    } else {
+      val -= 1;
+    }
+  }
+  return val;
 }
+
+ll evaluateAlignmentWeDontLikeInsert(string x, string y, bool printMax = false) {
+  if (printMax) {
+    return x.size();
+  }
+  ll val = 0;
+  for (int i = 0; i < x.size(); i++) {
+    if (x[i] == y[i])
+      val += 1;
+    else if (x[i] == '-' || y[i] == '-') {
+      val -= 10;
+    } else {
+      val -= 1;
+    }
+  }
+  return val;
+}
+
