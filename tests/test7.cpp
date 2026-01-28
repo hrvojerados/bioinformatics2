@@ -27,12 +27,14 @@ int main() {
         model->align(x, y);
       auto end = std::chrono::high_resolution_clock::now();
       std::chrono::duration<double> elapsed = end - start;
-      ld delta = abs(evaluateAlignmentEqual(alignedX, alignedY) - NWEqual(x, y));
-      val += delta;
-      cout << delta << "\n";
+      // ld delta = abs(evaluateAlignmentEqual(alignedX, alignedY) - NWEqual(x, y));
+      cout << evaluateAlignmentEqual(alignedX, alignedY) << " ";
+      cout << NWEqual(x, y) << "\n";
+      // val += delta;
+      // cout << delta << "\n";
       time += elapsed.count();
-      cnt++;
+      // cnt++;
     }
   }
-  cout << val / (cnt * maxVal) << "  " << time / cnt << "\n";
+  // cout << val / (cnt * maxVal) << "  " << time / cnt << "\n";
 }

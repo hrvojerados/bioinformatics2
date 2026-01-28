@@ -19,8 +19,8 @@ int main() {
       continue;
     } else if (x == ""){
       x = line;
-      maxVal = x.size(); 
-      maxVal /= 2;
+      // maxVal = x.size(); 
+      // maxVal /= 2;
     } else {
       y = line;
       auto start = std::chrono::high_resolution_clock::now();
@@ -28,12 +28,13 @@ int main() {
         model->align(x, y);
       auto end = std::chrono::high_resolution_clock::now();
       std::chrono::duration<double> elapsed = end - start;
-      ld delta = abs(evaluateAlignmentHalfX(alignedX, alignedY) - NWHalfX(x, y));
-      val += delta;
-      cout << delta << "\n";
+      // ld delta = abs(evaluateAlignmentHalfX(alignedX, alignedY) - NWHalfX(x, y));
+      // val += delta;
+      cout << evaluateAlignmentHalfX(alignedX, alignedY) << " ";
+      cout << NWHalfX(x, y) << "\n";
       time += elapsed.count();
-      cnt++;
+      // cnt++;
     }
   }
-  cout << val / (cnt * maxVal) << "  " << time / cnt << "\n";
+  // cout << val / (cnt * maxVal) << "  " << time / cnt << "\n";
 }

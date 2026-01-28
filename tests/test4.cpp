@@ -22,17 +22,22 @@ int main() {
       maxVal = x.size(); 
     } else {
       y = line;
+      // x = "ATGCTAAAGTCGATGCAGTCATCA";
+      // y = "AATGTAAATTACATACATCA"; aa
+      // cout << x << "\n";
+      // cout << y << "\n";
       auto start = std::chrono::high_resolution_clock::now();
       auto [alignedX, alignedY] =
         model->align(x, y);
       auto end = std::chrono::high_resolution_clock::now();
       std::chrono::duration<double> elapsed = end - start;
-      ld delta = abs(evaluateAlignment(alignedX, alignedY) - NW(x, y)); 
-      cout << delta << "\n";
-      val += delta;
+      // ld delta = abs(evaluateAlignment(alignedX, alignedY) - NW(x, y)); 
+      cout << evaluateAlignment(alignedX, alignedY) << " ";
+      cout << NW(x, y) << "\n";
+      // val += delta;
       time += elapsed.count();
-      cnt++;
+      // cnt++;
     }
   }
-  cout << val / (cnt * maxVal) << "  " << time / cnt << "\n";
+  // cout << val / (cnt * maxVal) << "  " << time / cnt << "\n";
 }

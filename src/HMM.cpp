@@ -1,5 +1,6 @@
 #include<bits/stdc++.h>
 #include <cmath>
+#include <execution>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -11,7 +12,12 @@ using ll = long long;
 #define eps 1e-10
 #define EPS 20
 #define numOfIterations 50
-
+/*
+ kako izgleda NW poravnanje?
+ Usporedi s HMM ^
+ popravi tablicu (normiraj s max)
+ ispiši NW i HMM vrijednosti (usporedi prosjeke i medijane)
+*/
 void readData(
   string path,
   vector<pair<string, string>>& data) {
@@ -606,12 +612,18 @@ ll NW(string x, string y) {
   vector<vector<ll>> dp =
     vector<vector<ll>>
       (x.size() + 1, vector<ll>
-        (y.size() + 1)); 
+        (y.size() + 1, -2)); 
+  vector<vector<int>> 
+  backPointers(
+    x.size() + 1,
+    vector<int>(y.size() + 1));
   for (int j = 0; j < y.size() + 1; j++) {
     dp[0][j] = j * (-2);
+    backPointers[0][j] = -1;
   }
   for (int i = 0; i < x.size() + 1; i++) {
     dp[i][0] = i * (-2);
+    backPointers[i][0] = 1;
   }
   for (int i = 1; i < x.size() + 1; i++) {
     for (int j = 1; j < y.size() + 1; j++) {
@@ -621,8 +633,42 @@ ll NW(string x, string y) {
           dp[i][j - 1] - 2,
           dp[i - 1][j - 1] + 1 * (x[i - 1] == y[j - 1]) + (-1) * (x[i - 1] != y[j - 1]) 
         });
+      if (dp[i][j] == dp[i - 1][j - 1] + 1 * (x[i - 1] == y[j - 1]) + (-1) * (x[i - 1] != y[j - 1])) {
+        backPointers[i][j] = 0;
+      } else if (dp[i][j] == dp[i][j - 1] - 2) {
+        backPointers[i][j] = -1;
+      } else if (dp[i][j] == dp[i - 1][j] - 2) {
+        backPointers[i][j] = 1;
+      }
     }
   }
+  string seq1 = "";
+  string seq2 = "";
+  int i = x.size();
+  int j = y.size();
+  int curState;
+  int nxtState;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && backPointers[i][j] == 0) {
+      seq1 += x[i - 1];
+      seq2 += y[j - 1];
+      i--; j--;
+    } 
+    else if (i > 0 && (j == 0 || backPointers[i][j] == 1)) {
+      seq1 += x[i - 1];
+      seq2 += '-';
+      i--;
+    } 
+    else {
+      seq1 += '-';
+      seq2 += y[j - 1];
+      j--;
+    }
+  }
+  reverse(seq1.begin(), seq1.end());
+  reverse(seq2.begin(), seq2.end());
+  cout << seq1 << "\n";
+  cout << seq2 << "\n";
   return dp[x.size()][y.size()];
 }
 
