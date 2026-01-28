@@ -350,7 +350,7 @@ public:
     int y = Y.size() - 1;
     int curState;
     int nxtState;
-    while (x != 0 && y != 0) {
+    while (x >= 0 && y >= 0) {
       if (
         Vm[x][y] > Vix[x][y] && 
         Vm[x][y] > Viy[x][y]) {
@@ -375,8 +375,8 @@ public:
         y--;
       } 
     }
-    seq1 = '-' + seq1;
-    seq2 = '-' + seq2;
+    seq1 = seq1.substr(0, seq1.size() - 1);
+    seq2 = seq2.substr(0, seq2.size() - 1);
     return {seq1, seq2};
   }
 
